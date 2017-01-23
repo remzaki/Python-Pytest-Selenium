@@ -14,21 +14,33 @@ browsers = [
         "platform": "Windows 10",
         "browserName": "firefox",
         "version": "49.0"
-    }, {
-        "platform": "Windows 7",
-        "browserName": "internet explorer",
-        "version": "11.0"
-    }, {
-        "platform": "OS X 10.11",
-        "browserName": "safari",
-        "version": "10.0"
-    }, {
-        "platform": "OS X 10.11",
-        "browserName": "chrome",
-        "version": "54.0"
-    }]
+    }
+    # , {
+    #     "platform": "Windows 7",
+    #     "browserName": "internet explorer",
+    #     "version": "11.0"
+    # }, {
+    #     "platform": "OS X 10.11",
+    #     "browserName": "safari",
+    #     "version": "10.0"
+    # }, {
+    #     "platform": "OS X 10.11",
+    #     "browserName": "chrome",
+    #     "version": "54.0"
+    # }
+]
+
+
+def pytest_addoption(parser):
+    print "pytest_addoption()"
+    parser.addoption("--all", action="store", help="run all combinations")
+
 
 def pytest_generate_tests(metafunc):
+    print "pytest_generate_tests()"
+    print "#"*10
+    print metafunc.config.option.all
+    print "#"*10
     if 'driver' in metafunc.fixturenames:
         metafunc.parametrize('browser_config',
                              browsers,
@@ -37,11 +49,13 @@ def pytest_generate_tests(metafunc):
 
 
 def _generate_param_ids(name, values):
-    return [("<%s:%s>" % (name, value)).replace('.', '_') for value in values]
+    z = [("<%s:%s>" % (name, value)).replace('.', '_') for value in values]
+    return z
 
 
 @pytest.yield_fixture(scope='function')
 def driver(request, browser_config):
+    print "driver()"
     # if the assignment below does not make sense to you please read up on object assignments.
     # The point is to make a copy and not mess with the original test spec.
     desired_caps = dict()
@@ -49,8 +63,8 @@ def driver(request, browser_config):
     test_name = request.node.name
     build_tag = environ.get('BUILD_TAG', None)
     tunnel_id = environ.get('TUNNEL_IDENTIFIER', None)
-    username = environ.get('SAUCE_USERNAME', None)
-    access_key = environ.get('SAUCE_ACCESS_KEY', None)
+    username = 'rcogonon'
+    access_key = '6837a51d-ac53-4349-9fa8-71dbddb83c62'
 
     selenium_endpoint = "https://%s:%s@ondemand.saucelabs.com:443/wd/hub" % (username, access_key)
     desired_caps['build'] = build_tag
@@ -86,6 +100,7 @@ def driver(request, browser_config):
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
 def pytest_runtest_makereport(item, call):
+    print "pytest_runtest_makereport()"
     # this sets the result as a test attribute for SauceLabs reporting.
     # execute all other hooks to obtain the report object
     outcome = yield
